@@ -1,19 +1,42 @@
 -- BSR Marketplace Database Setup
 -- Run this SQL script in your MySQL/phpMyAdmin
 
--- Create the database
-CREATE DATABASE IF NOT EXISTS bsr_marketplace CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE bsr_marketplace;
+-- (Database creation removed for shared hosting)
 
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    email VARCHAR(150) UNIQUE NOT NULL,
+    email VARCHAR(150) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
+    account_type ENUM('buyer','seller') NOT NULL DEFAULT 'buyer',
+    phone_number VARCHAR(20) DEFAULT NULL,
+    phone_verified TINYINT(1) NOT NULL DEFAULT 0,
+    is_verified_seller TINYINT(1) NOT NULL DEFAULT 0,
+    seller_rating DECIMAL(3,2) NOT NULL DEFAULT 0.00,
+    total_sales INT NOT NULL DEFAULT 0,
+    is_flagged TINYINT(1) NOT NULL DEFAULT 0,
+    status ENUM('active','suspended','banned') NOT NULL DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_email (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Messages table (for global messaging)
+CREATE TABLE IF NOT EXISTS messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    from_id INT NOT NULL,
+    to_id INT NOT NULL,
+    listing_title VARCHAR(255) NULL,
+    message TEXT NOT NULL,
+    is_read TINYINT(1) NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (from_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (to_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_to_id (to_id),
+    INDEX idx_from_id (from_id),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Listings table
 CREATE TABLE IF NOT EXISTS listings (
@@ -35,7 +58,7 @@ CREATE TABLE IF NOT EXISTS listings (
     INDEX idx_category (category),
     INDEX idx_type (type),
     INDEX idx_created_at (created_at)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Bookmarks table
 CREATE TABLE IF NOT EXISTS bookmarks (
@@ -48,7 +71,7 @@ CREATE TABLE IF NOT EXISTS bookmarks (
     UNIQUE KEY unique_bookmark (user_id, listing_id),
     INDEX idx_user_id (user_id),
     INDEX idx_listing_id (listing_id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Reports table (optional - for tracking reported listings)
 CREATE TABLE IF NOT EXISTS reports (
@@ -60,7 +83,7 @@ CREATE TABLE IF NOT EXISTS reports (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (listing_id) REFERENCES listings(id) ON DELETE CASCADE,
     INDEX idx_listing_id (listing_id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Insert some sample data (optional)
 -- You can remove this if you don't want sample data

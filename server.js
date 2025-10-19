@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const twilio = require('twilio');
 const path = require('path');
 const fs = require('fs');
 const EnvEncryption = require('./encrypt-env');
@@ -22,19 +21,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-// Twilio configuration - These should be in environment variables
+// Twilio disabled
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
-
-// Validate environment variables
-if (!accountSid || !authToken || !twilioPhoneNumber) {
-    console.error('Missing required Twilio environment variables');
-    console.error('Please set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER');
-    process.exit(1);
-}
-
-const client = twilio(accountSid, authToken);
 
 // Rate limiting for SMS sending (simple in-memory store)
 const smsRateLimit = new Map();
@@ -89,85 +79,9 @@ function validatePhoneNumber(phoneNumber) {
     return null;
 }
 
-// SMS sending endpoint
+// SMS endpoint disabled
 app.post('/api/send-sms', async (req, res) => {
-    try {
-        const { phone, message } = req.body;
-        
-        // Validate input
-        if (!phone || !message) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'Phone number and message are required' 
-            });
-        }
-        
-        // Validate and format phone number
-        const validatedPhone = validatePhoneNumber(phone);
-        if (!validatedPhone) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'Invalid phone number format' 
-            });
-        }
-        
-        // Check rate limiting
-        if (!checkRateLimit(validatedPhone)) {
-            return res.status(429).json({ 
-                success: false, 
-                error: 'Rate limit exceeded. Please wait before requesting another SMS.' 
-            });
-        }
-        
-        // Send SMS via Twilio
-        const twilioMessage = await client.messages.create({
-            body: message,
-            from: twilioPhoneNumber,
-            to: validatedPhone
-        });
-        
-        console.log(`SMS sent successfully to ${validatedPhone}. SID: ${twilioMessage.sid}`);
-        
-        res.json({ 
-            success: true, 
-            message: 'SMS sent successfully',
-            messageSid: twilioMessage.sid
-        });
-        
-    } catch (error) {
-        console.error('Error sending SMS:', error);
-        
-        // Handle specific Twilio errors
-        if (error.code) {
-            switch (error.code) {
-                case 21211:
-                    return res.status(400).json({ 
-                        success: false, 
-                        error: 'Invalid phone number' 
-                    });
-                case 21408:
-                    return res.status(400).json({ 
-                        success: false, 
-                        error: 'Permission to send SMS to this number denied' 
-                    });
-                case 21614:
-                    return res.status(400).json({ 
-                        success: false, 
-                        error: 'Phone number is not a valid mobile number' 
-                    });
-                default:
-                    return res.status(500).json({ 
-                        success: false, 
-                        error: 'Failed to send SMS' 
-                    });
-            }
-        }
-        
-        res.status(500).json({ 
-            success: false, 
-            error: 'Internal server error' 
-        });
-    }
+    return res.status(410).json({ success: false, error: 'SMS service disabled' });
 });
 
 // API Endpoints for Global Data Storage
@@ -278,5 +192,4 @@ app.get('/', (req, res) => {
 // Start the server
 app.listen(port, () => {
     console.log(`🚀 BSR SMS Server running on http://localhost:${port}`);
-    console.log(`📱 Twilio SMS service initialized with number: ${twilioPhoneNumber}`);
 });

@@ -1476,7 +1476,8 @@
         }
         
         // API base path
-        const API_BASE = '';
+        // If hosting APIs on a different domain, set API_BASE to like 'https://your-php-host.example.com/' (with trailing slash)
+        const API_BASE = 'https://bsr-api.42web.io/';
         
         // Generic API helper
         async function apiCall(url, options = {}) {
@@ -1554,7 +1555,7 @@
             };
             
             try {
-                const res = await apiCall(`api/messages.php`, {
+                const res = await apiCall(`${API_BASE}api/messages.php`, {
                     method: 'POST',
                     body: JSON.stringify(newMessage)
                 });
@@ -1678,7 +1679,7 @@
             // Mark read on server
             for (const id of messagesToMarkRead) {
                 try {
-                    await apiCall(`api/messages.php`, {
+                    await apiCall(`${API_BASE}api/messages.php`, {
                         method: 'PUT',
                         body: JSON.stringify({ id, user_id: currentUser.id })
                     });
@@ -1715,15 +1716,15 @@
         
         // Load data from server
         async function loadGlobalData() {
-            const listingsRes = await apiCall(`api/listings.php`);
+            const listingsRes = await apiCall(`${API_BASE}api/listings.php`);
             listings = listingsRes.listings || [];
             
             if (currentUser) {
-                const bmRes = await apiCall(`api/bookmarks.php?user_id=${encodeURIComponent(currentUser.id)}`);
+                const bmRes = await apiCall(`${API_BASE}api/bookmarks.php?user_id=${encodeURIComponent(currentUser.id)}`);
                 const bmIds = new Set(bmRes.bookmarks.map(b => b.id));
                 bookmarkedListings = bmRes.bookmarks.map(b => ({ user_id: currentUser.id, listing_id: b.id }));
                 
-                const msgRes = await apiCall(`api/messages.php?user_id=${encodeURIComponent(currentUser.id)}`);
+                const msgRes = await apiCall(`${API_BASE}api/messages.php?user_id=${encodeURIComponent(currentUser.id)}`);
                 messages = msgRes.messages || [];
             } else {
                 bookmarkedListings = [];
@@ -1792,7 +1793,7 @@
         // Login function (server)
         async function login(email, password) {
             try {
-                const data = await apiCall(`api/users.php?action=login`, {
+                const data = await apiCall(`${API_BASE}api/users.php?action=login`, {
                     method: 'POST',
                     body: JSON.stringify({ email, password })
                 });
@@ -1813,7 +1814,7 @@
         // Register function (server)
         async function register(name, email, password) {
             try {
-                const data = await apiCall(`api/users.php?action=register`, {
+                const data = await apiCall(`${API_BASE}api/users.php?action=register`, {
                     method: 'POST',
                     body: JSON.stringify({ name, email, password, account_type: 'buyer' })
                 });
@@ -1876,7 +1877,7 @@
             if (filters.search) params.set('search', filters.search);
             if (filters.sort) params.set('sort', filters.sort);
             const qs = params.toString();
-            const url = `api/listings.php${qs ? `?${qs}` : ''}`;
+            const url = `${API_BASE}api/listings.php${qs ? `?${qs}` : ''}`;
             apiCall(url)
                 .then(data => {
                     filteredListings = data.listings || [];
@@ -2261,7 +2262,7 @@
             
             // Save to server
             const payload = { user_id: currentUser.id, listing_id: listingId };
-            apiCall(`api/bookmarks.php`, {
+            apiCall(`${API_BASE}api/bookmarks.php`, {
                 method: 'POST',
                 body: JSON.stringify(payload)
             })
@@ -2417,7 +2418,7 @@
             const listingId = parseInt(document.getElementById('deleteListingId').value);
             
             try {
-                await apiCall(`api/listings.php?id=${encodeURIComponent(listingId)}`, {
+                await apiCall(`${API_BASE}api/listings.php?id=${encodeURIComponent(listingId)}`, {
                     method: 'DELETE',
                     body: JSON.stringify({ user_id: currentUser.id })
                 });
@@ -2512,7 +2513,7 @@
                 };
                 
                 try {
-                    await apiCall(`api/listings.php`, {
+                    await apiCall(`${API_BASE}api/listings.php`, {
                         method: 'POST',
                         body: JSON.stringify(newListing)
                     });

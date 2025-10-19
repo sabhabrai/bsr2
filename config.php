@@ -1,9 +1,9 @@
 <?php
 // Database configuration
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');  // Change this to your database username
-define('DB_PASS', '');      // Change this to your database password
-define('DB_NAME', 'bsr_marketplace');
+define('DB_HOST', 'sql306.infinityfree.com');
+define('DB_USER', 'if0_40206297');
+define('DB_PASS', 'Khotang33');
+define('DB_NAME', 'if0_40206297_bsr');
 
 // Application configuration
 define('APP_NAME', 'BSR Marketplace');
@@ -17,25 +17,7 @@ define('ENCRYPTION_KEY', 'your-encryption-key-here'); // Change this in producti
 define('MAX_LOGIN_ATTEMPTS', 5);
 define('LOGIN_LOCKOUT_TIME', 900); // 15 minutes in seconds
 
-// Payment configuration
-define('STRIPE_PUBLISHABLE_KEY', 'pk_test_your_stripe_key');
-define('STRIPE_SECRET_KEY', 'sk_test_your_stripe_key');
-define('PAYPAL_CLIENT_ID', 'your_paypal_client_id');
-define('PAYPAL_CLIENT_SECRET', 'your_paypal_client_secret');
-define('PAYPAL_MODE', 'sandbox'); // sandbox or live
-
-// SMS/Phone verification with Twilio
-define('TWILIO_ACCOUNT_SID', 'ACca0eb5fb57fe720405e76c251b947cfe');
-define('TWILIO_AUTH_TOKEN', '77295e5175392f933ed869d7c9c7867e');
-define('TWILIO_PHONE_NUMBER', '+18555115350');
-
-// Email configuration
-define('SMTP_HOST', 'smtp.gmail.com');
-define('SMTP_PORT', 587);
-define('SMTP_USERNAME', 'your-email@gmail.com');
-define('SMTP_PASSWORD', 'your-app-password');
-define('FROM_EMAIL', 'noreply@bsr-marketplace.com');
-define('FROM_NAME', 'BSR Marketplace');
+// Removed: Payment (Stripe/PayPal), SMS (Twilio), and SMTP/Email configuration
 
 // File upload configuration
 define('UPLOAD_MAX_SIZE', 5242880); // 5MB in bytes
@@ -77,7 +59,21 @@ function getDatabase() {
 // Enhanced CORS headers for API requests
 if (!headers_sent()) {
     header('Content-Type: application/json; charset=utf-8');
-    header('Access-Control-Allow-Origin: *'); // In production, specify your domain
+
+    $allowedOrigins = [
+        'https://bsr-buysellrent.netlify.app',
+        'https://bsr-api.42web.io',
+        'http://localhost:3000',
+        'http://localhost:5173'
+    ];
+    $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+    if ($origin && in_array($origin, $allowedOrigins, true)) {
+        header('Access-Control-Allow-Origin: ' . $origin);
+    } else {
+        header('Access-Control-Allow-Origin: *');
+    }
+
+    header('Vary: Origin');
     header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
     header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
     header('Access-Control-Max-Age: 86400'); // 24 hours
