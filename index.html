@@ -1458,7 +1458,7 @@
         // User authentication
         let currentUser = JSON.parse(localStorage.getItem('bsrCurrentUser'));
         
-        // Global data storage
+        // Global data storage (populated from server)
         let listings = [];
         let filteredListings = [];
         let bookmarkedListings = [];
@@ -1475,12 +1475,20 @@
             return Date.now() + Math.random().toString(36).substr(2, 9);
         }
         
-        // Persist data locally
-        function saveData() {
-            localStorage.setItem('bsrListings', JSON.stringify(listings));
-            localStorage.setItem('bsrUsers', JSON.stringify(users));
-            localStorage.setItem('bsrMessages', JSON.stringify(messages));
-            localStorage.setItem('bsrBookmarks', JSON.stringify(bookmarkedListings));
+        // API base path
+        const API_BASE = '';
+        
+        // Generic API helper
+        async function apiCall(url, options = {}) {
+            const resp = await fetch(url, {
+                headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+                ...options
+            });
+            const data = await resp.json().catch(() => ({}));
+            if (!resp.ok || data.success === false) {
+                throw new Error(data.error || `Request failed: ${resp.status}`);
+            }
+            return data;
         }
 
         // Messaging System Functions
@@ -1546,14 +1554,15 @@
             };
             
             try {
-                messages.push(newMessage);
-                saveData();
+                const res = await apiCall(`/api/messages.php`, {
+                    method: 'POST',
+                    body: JSON.stringify(newMessage)
+                });
+                messages.unshift(res.messageData);
                 
-                // Clear compose area
                 document.getElementById('composeInput').value = '';
                 document.getElementById('messageCompose').style.display = 'none';
                 currentRecipient = null;
-                
                 showNotification('Message sent!');
                 loadMessages();
             } catch (error) {
@@ -1666,8 +1675,15 @@
                 }
             });
             
-            // Persist read status locally
-            saveData();
+            // Mark read on server
+            for (const id of messagesToMarkRead) {
+                try {
+                    await apiCall(`/api/messages.php`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ id, user_id: currentUser.id })
+                    });
+                } catch (e) { /* noop */ }
+            }
             
             // For now, just show a preview of all messages in the conversation
             const allMessages = conversation.messages.sort((a, b) => a.timestamp - b.timestamp);
@@ -1697,14 +1713,22 @@
             return new Date(timestamp).toLocaleDateString();
         }
         
-        // API Helper Functions (removed: offline-only)
-        
-        // Load data (offline-only)
+        // Load data from server
         async function loadGlobalData() {
-            listings = JSON.parse(localStorage.getItem('bsrListings')) || [];
-            users = JSON.parse(localStorage.getItem('bsrUsers')) || [];
-            messages = JSON.parse(localStorage.getItem('bsrMessages')) || [];
-            bookmarkedListings = JSON.parse(localStorage.getItem('bsrBookmarks')) || [];
+            const listingsRes = await apiCall(`/api/listings.php`);
+            listings = listingsRes.listings || [];
+            
+            if (currentUser) {
+                const bmRes = await apiCall(`/api/bookmarks.php?user_id=${encodeURIComponent(currentUser.id)}`);
+                const bmIds = new Set(bmRes.bookmarks.map(b => b.id));
+                bookmarkedListings = bmRes.bookmarks.map(b => ({ user_id: currentUser.id, listing_id: b.id }));
+                
+                const msgRes = await apiCall(`/api/messages.php?user_id=${encodeURIComponent(currentUser.id)}`);
+                messages = msgRes.messages || [];
+            } else {
+                bookmarkedListings = [];
+                messages = [];
+            }
         }
 
         // Check authentication status and update UI
@@ -1765,12 +1789,14 @@
         }
 
         
-        // Login function
+        // Login function (server)
         async function login(email, password) {
-            const localUsers = JSON.parse(localStorage.getItem('bsrUsers')) || [];
-            const user = localUsers.find(u => u.email === email && u.password === password);
-            if (user) {
-                currentUser = { id: user.id, name: user.name, email: user.email, phone: user.phone };
+            try {
+                const data = await apiCall(`/api/users.php?action=login`, {
+                    method: 'POST',
+                    body: JSON.stringify({ email, password })
+                });
+                currentUser = data.user;
                 localStorage.setItem('bsrCurrentUser', JSON.stringify(currentUser));
                 updateAuthUI();
                 closeModal('authModal');
@@ -1778,34 +1804,31 @@
                 await loadGlobalData();
                 displayListings();
                 return true;
-            }
-            showNotification('Invalid email or password', 'error');
-            return false;
-        }
-
-        // Register function
-        async function register(name, email, password) {
-            const localUsers = JSON.parse(localStorage.getItem('bsrUsers')) || [];
-            if (localUsers.some(u => u.email === email)) {
-                showNotification('Email already registered', 'error');
+            } catch (e) {
+                showNotification('Invalid email or password', 'error');
                 return false;
             }
-            const newUser = {
-                id: Date.now(),
-                name,
-                email,
-                password
-            };
-            localUsers.push(newUser);
-            localStorage.setItem('bsrUsers', JSON.stringify(localUsers));
-            currentUser = { id: newUser.id, name: newUser.name, email: newUser.email };
-            localStorage.setItem('bsrCurrentUser', JSON.stringify(currentUser));
-            updateAuthUI();
-            closeModal('authModal');
-            showNotification('Account created successfully!');
-            await loadGlobalData();
-            displayListings();
-            return true;
+        }
+
+        // Register function (server)
+        async function register(name, email, password) {
+            try {
+                const data = await apiCall(`/api/users.php?action=register`, {
+                    method: 'POST',
+                    body: JSON.stringify({ name, email, password, account_type: 'buyer' })
+                });
+                currentUser = data.user;
+                localStorage.setItem('bsrCurrentUser', JSON.stringify(currentUser));
+                updateAuthUI();
+                closeModal('authModal');
+                showNotification('Account created successfully!');
+                await loadGlobalData();
+                displayListings();
+                return true;
+            } catch (e) {
+                showNotification('Registration failed', 'error');
+                return false;
+            }
         }
 
         
@@ -1845,85 +1868,27 @@
 
         // Load listings with filtering and sorting
         function loadListings(filters = {}) {
-            // First, remove expired listings from the main array
-            const now = Date.now();
-            const originalLength = listings.length;
-            listings = listings.filter(listing => {
-                const expiryTime = listing.timestamp + (listing.duration * 60 * 60 * 1000);
-                return now < expiryTime;
-            });
-            
-            // Persist current listings after removing expired ones
-            if (listings.length !== originalLength) {
-                saveData();
-            }
-            
-            // Start with all non-expired listings
-            let result = [...listings];
-            
-            // Apply user filter
-            if (filters.user_id) {
-                result = result.filter(listing => listing.user_id == filters.user_id);
-            }
-            
-            // Apply category filter
-            if (filters.category) {
-                result = result.filter(listing => listing.category === filters.category);
-            }
-            
-            // Apply type filter
-            if (filters.type) {
-                result = result.filter(listing => listing.type === filters.type);
-            }
-            
-            // Apply search filter
-            if (filters.search) {
-                const searchTerm = filters.search.toLowerCase();
-                result = result.filter(listing => 
-                    listing.title.toLowerCase().includes(searchTerm) ||
-                    listing.description.toLowerCase().includes(searchTerm) ||
-                    listing.location.toLowerCase().includes(searchTerm)
-                );
-            }
-            
-            // Calculate expiry for each listing (should all be non-expired now)
-            result = result.map(listing => ({
-                ...listing,
-                expiry: calculateExpiry(listing)
-            }));
-            
-            // Apply sorting
-            if (filters.sort) {
-                switch (filters.sort) {
-                    case 'newest':
-                        result.sort((a, b) => b.timestamp - a.timestamp);
-                        break;
-                    case 'oldest':
-                        result.sort((a, b) => a.timestamp - b.timestamp);
-                        break;
-                    case 'price-low':
-                        result.sort((a, b) => a.price - b.price);
-                        break;
-                    case 'price-high':
-                        result.sort((a, b) => b.price - a.price);
-                        break;
-                    case 'expiry':
-                        result.sort((a, b) => {
-                            return a.timestamp + (a.duration * 60 * 60 * 1000) - (b.timestamp + (b.duration * 60 * 60 * 1000));
-                        });
-                        break;
-                    default:
-                        result.sort((a, b) => b.timestamp - a.timestamp);
-                }
-            } else {
-                result.sort((a, b) => b.timestamp - a.timestamp);
-            }
-            
-            filteredListings = result;
+            // Build query string from filters
+            const params = new URLSearchParams();
+            if (filters.category) params.set('category', filters.category);
+            if (filters.type) params.set('type', filters.type);
+            if (filters.user_id) params.set('user_id', filters.user_id);
+            if (filters.search) params.set('search', filters.search);
+            if (filters.sort) params.set('sort', filters.sort);
+            const qs = params.toString();
+            const url = `/api/listings.php${qs ? `?${qs}` : ''}`;
+            apiCall(url)
+                .then(data => {
+                    filteredListings = data.listings || [];
+                    displayListings();
+                })
+                .catch(error => {
+                    console.error('Failed to load listings:', error);
+                });
         }
 
         // Display listings
-        async function displayListings() {
+        function displayListings() {
             const grid = document.getElementById('listingsGrid');
             
             if (filteredListings.length === 0) {
@@ -2294,17 +2259,25 @@
                 showNotification('Listing bookmarked');
             }
             
-            // Save to localStorage
-            saveData();
-            
-            // Refresh the current view to update bookmark icons
-            if (document.getElementById('myListingsSection').style.display === 'block') {
-                displayMyListings();
-            } else if (document.getElementById('bookmarksSection').style.display === 'block') {
-                displayBookmarks();
-            } else {
-                displayListings();
-            }
+            // Save to server
+            const payload = { user_id: currentUser.id, listing_id: listingId };
+            apiCall(`/api/bookmarks.php`, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            })
+                .then(() => {
+                    // Refresh the current view to update bookmark icons
+                    if (document.getElementById('myListingsSection').style.display === 'block') {
+                        displayMyListings();
+                    } else if (document.getElementById('bookmarksSection').style.display === 'block') {
+                        displayBookmarks();
+                    } else {
+                        displayListings();
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to save bookmark:', error);
+                });
         }
         
         function isBookmarked(listingId) {
@@ -2443,24 +2416,26 @@
         async function confirmDeleteListing() {
             const listingId = parseInt(document.getElementById('deleteListingId').value);
             
-            // Remove locally
-            const listingIndex = listings.findIndex(listing => listing.id === listingId);
-            if (listingIndex > -1) {
-                listings.splice(listingIndex, 1);
-            }
-            // Remove any bookmarks for this listing
-            bookmarkedListings = bookmarkedListings.filter(bookmark => bookmark.listing_id !== listingId);
-            saveData();
-            closeModal('deleteModal');
-            showNotification('Listing deleted successfully');
-            // Refresh the current view
-            if (document.getElementById('myListingsSection').style.display === 'block') {
-                displayMyListings();
-            } else if (document.getElementById('bookmarksSection').style.display === 'block') {
-                displayBookmarks();
-            } else {
-                loadListings();
-                displayListings();
+            try {
+                await apiCall(`/api/listings.php?id=${encodeURIComponent(listingId)}`, {
+                    method: 'DELETE',
+                    body: JSON.stringify({ user_id: currentUser.id })
+                });
+                closeModal('deleteModal');
+                showNotification('Listing deleted successfully');
+                await loadGlobalData();
+                if (document.getElementById('myListingsSection').style.display === 'block') {
+                    loadListings({ user_id: currentUser.id });
+                    displayMyListings();
+                } else if (document.getElementById('bookmarksSection').style.display === 'block') {
+                    displayBookmarks();
+                } else {
+                    loadListings();
+                    displayListings();
+                }
+            } catch (error) {
+                closeModal('deleteModal');
+                showNotification('Failed to delete listing', 'error');
             }
         }
 
@@ -2501,10 +2476,6 @@
                 await register(name, email, password);
             });
             
-            
-            // Image upload event listener
-            document.getElementById('postImages').addEventListener('change', handleImageSelection);
-
             // Post listing form submission
             document.getElementById('postForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
@@ -2540,9 +2511,15 @@
                     posted: new Date(now).toLocaleDateString()
                 };
                 
-                // Add locally
-                listings.push(newListing);
-                saveData();
+                try {
+                    await apiCall(`/api/listings.php`, {
+                        method: 'POST',
+                        body: JSON.stringify(newListing)
+                    });
+                } catch(e) {
+                    showNotification('Failed to post listing', 'error');
+                    return;
+                }
                 
                 closeModal('postModal');
                 this.reset();
@@ -2553,7 +2530,7 @@
                 
                 showNotification(`Listing posted successfully! It will expire in ${durationText}.`);
                 
-                // Refresh listings
+                await loadGlobalData();
                 loadListings();
                 displayListings();
             });

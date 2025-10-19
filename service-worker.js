@@ -22,6 +22,18 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const req = event.request;
+  const url = new URL(req.url);
+
+  // Always bypass cache for API requests to ensure fresh, shared data
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(
+      fetch(req).catch(() => new Response(JSON.stringify({ success: false, error: 'offline' }), {
+        status: 503,
+        headers: { 'Content-Type': 'application/json' }
+      }))
+    );
+    return;
+  }
 
   // For navigation requests, serve the app shell when offline
   if (req.mode === 'navigate') {
@@ -32,7 +44,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Cache-first for same-origin GET requests
-  if (req.method === 'GET' && new URL(req.url).origin === self.location.origin) {
+  if (req.method === 'GET' && url.origin === self.location.origin) {
     event.respondWith(
       caches.match(req).then((cached) => cached || fetch(req).then((res) => {
         const resClone = res.clone();
