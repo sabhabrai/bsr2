@@ -25,7 +25,13 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
 
   // Always bypass cache for API requests to ensure fresh, shared data
-  if (url.pathname.startsWith('/api/')) {
+  // Works even if app is served from a subdirectory (e.g., /bsr/api/...)
+  if (url.pathname.includes('/api/')) {
+    // Allow quick pass-through for CORS preflight
+    if (req.method === 'OPTIONS') {
+      event.respondWith(new Response(null, { status: 204 }));
+      return;
+    }
     event.respondWith(
       fetch(req).catch(() => new Response(JSON.stringify({ success: false, error: 'offline' }), {
         status: 503,

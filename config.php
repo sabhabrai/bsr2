@@ -8,8 +8,8 @@ define('DB_NAME', 'bsr_marketplace');
 // Application configuration
 define('APP_NAME', 'BSR Marketplace');
 define('APP_VERSION', '2.0.0');
-define('APP_ENV', 'development'); // development, production
-define('APP_DEBUG', true);
+define('APP_ENV', 'production'); // development, production
+define('APP_DEBUG', false);
 
 // Security configuration
 define('JWT_SECRET', 'your-jwt-secret-key-here'); // Change this in production
