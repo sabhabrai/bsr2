@@ -1,0 +1,2597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BSR - Local Buy, Sell, Rent Marketplace</title>
+    <meta name="theme-color" content="#1a1a1a">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            background: #f8f9fa;
+        }
+
+        /* Header */
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #1a1a1a;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .search-container {
+            flex: 1;
+            max-width: 500px;
+            margin: 0 2rem;
+            position: relative;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 14px 20px 14px 50px;
+            border: 2px solid #e5e7eb;
+            border-radius: 50px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .search-bar:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280;
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .nav-btn {
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        .nav-btn.primary {
+            background: #1a1a1a;
+            color: white;
+        }
+
+        .nav-btn.primary:hover {
+            background: #000000;
+            transform: translateY(-1px);
+        }
+
+        .nav-btn.secondary {
+            color: #374151;
+            background: transparent;
+        }
+
+        .nav-btn.secondary:hover {
+            background: #f5f5f5;
+        }
+
+        .user-menu {
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            color: #1a1a1a;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .user-menu:hover {
+            text-decoration: underline;
+        }
+
+        /* Main Content */
+        main {
+            margin-top: 80px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 4rem 0 3rem;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #111827;
+            margin-bottom: 1.5rem;
+            letter-spacing: -1px;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            color: #6b7280;
+            margin-bottom: 2.5rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .cta-btn {
+            padding: 16px 32px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .cta-btn.primary {
+            background: #1a1a1a;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .cta-btn.primary:hover {
+            transform: translateY(-2px);
+            background: #000000;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .cta-btn.secondary {
+            background: white;
+            color: #1a1a1a;
+            border: 2px solid #1a1a1a;
+        }
+
+        .cta-btn.secondary:hover {
+            border-color: #000000;
+            color: #000000;
+            transform: translateY(-2px);
+        }
+
+        /* Categories */
+        .categories {
+            padding: 4rem 0;
+            background: white;
+            margin: 3rem 0;
+            border-radius: 24px;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 3rem;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            justify-items: center;
+        }
+
+        .category-card {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            padding: 2.5rem;
+            border-radius: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .category-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border-color: #2563eb;
+        }
+
+        .category-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+
+        .category-card h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 0.8rem;
+        }
+
+        .category-card p {
+            color: #6b7280;
+            font-size: 0.95rem;
+        }
+
+        /* Listings Section */
+        .listings-section {
+            padding: 4rem 0;
+        }
+
+        .listings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 10px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            background: white;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .filter-select:focus {
+            border-color: #2563eb;
+        }
+
+        .listings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .listing-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 1px solid #f1f3f4;
+            position: relative;
+        }
+
+        .listing-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .listing-image {
+            height: 220px;
+            background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #9ca3af;
+        }
+
+        .listing-content {
+            padding: 2rem;
+        }
+
+        .listing-type {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .type-sell { background: #dcfce7; color: #16a34a; }
+        .type-rent { background: #fef3c7; color: #d97706; }
+        .type-buy { background: #dbeafe; color: #2563eb; }
+
+        .listing-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .listing-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 1rem;
+        }
+
+        .listing-description {
+            color: #6b7280;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .listing-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid #f3f4f6;
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+
+        .listing-location {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .contact-buttons {
+            display: flex;
+            gap: 0.8rem;
+            margin-top: 1rem;
+        }
+
+        .contact-btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .contact-btn.email {
+            background: #1a1a1a;
+            color: white;
+        }
+
+        .contact-btn.phone {
+            background: #666666;
+            color: white;
+        }
+
+        .contact-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #6b7280;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .empty-state p {
+            margin-bottom: 2rem;
+        }
+
+        .owner-actions {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .owner-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.1rem;
+            color: #6b7280;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .owner-btn:hover {
+            background: white;
+            color: #ef4444;
+            transform: scale(1.1);
+        }
+
+        .expiry-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            z-index: 10;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 3% auto;
+            padding: 3rem;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .close-btn {
+            position: absolute;
+            right: 24px;
+            top: 24px;
+            background: #f3f4f6;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #6b7280;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            border-color: #1a1a1a;
+            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-textarea {
+            height: 120px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: #1a1a1a;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            background: #000000;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .confirm-btn {
+            width: 100%;
+            padding: 16px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .confirm-btn:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+
+        .cancel-btn {
+            width: 100%;
+            padding: 16px;
+            background: #9ca3af;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .cancel-btn:hover {
+            background: #6b7280;
+        }
+
+        /* Auth Modal Styles */
+        .auth-container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .auth-tab {
+            flex: 1;
+            text-align: center;
+            padding: 1rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: #6b7280;
+            transition: all 0.3s ease;
+        }
+
+        .auth-tab.active {
+            color: #1a1a1a;
+            border-bottom: 2px solid #1a1a1a;
+            margin-bottom: -2px;
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .auth-message {
+            text-align: center;
+            padding: 2rem;
+            background: #f9fafb;
+            border-radius: 12px;
+            margin-top: 2rem;
+        }
+
+        .auth-message h3 {
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        /* My Listings Section */
+        .my-listings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            z-index: 3000;
+            animation: fadeInUp 0.3s ease-out;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .search-container {
+                margin: 0;
+                max-width: 100%;
+            }
+
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .listings-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+
+            .filter-bar {
+                flex-direction: column;
+            }
+
+            .listings-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                margin: 5% auto;
+                padding: 2rem;
+            }
+            
+            .messaging-panel {
+                width: 100%;
+                right: -100%;
+                top: 60px;
+                height: calc(100vh - 60px);
+                border-radius: 0;
+            }
+            
+            .messaging-toggle {
+                right: 10px;
+                width: 45px;
+                height: 45px;
+                font-size: 0.55rem;
+            }
+            
+            .category-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .category-card {
+                max-width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 1.8rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+            }
+            
+            .category-card {
+                padding: 1.5rem;
+            }
+            
+            .listing-card {
+                margin: 0 0.25rem;
+            }
+            .listing-content { padding: 1rem; }
+            .listing-title { font-size: 1.1rem; }
+            .listing-price { font-size: 1.2rem; }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* Messaging System Styles */
+        .messaging-panel {
+            position: fixed;
+            right: -400px;
+            top: 80px;
+            width: 380px;
+            height: calc(100vh - 100px);
+            background: #ffffff;
+            border: 2px solid #1a1a1a;
+            border-radius: 12px 0 0 12px;
+            z-index: 1500;
+            display: flex;
+            flex-direction: column;
+            transition: right 0.3s ease;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .messaging-panel.open {
+            right: 0;
+        }
+
+        .messaging-header {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+            background: #1a1a1a;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .messaging-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .message-close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message-thread {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .message-thread:hover {
+            border-color: #1a1a1a;
+            background: #f5f5f5;
+        }
+
+        .message-thread.unread {
+            border-left: 4px solid #1a1a1a;
+        }
+
+        .thread-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .thread-title {
+            font-weight: 600;
+            color: #1a1a1a;
+            font-size: 0.95rem;
+        }
+
+        .thread-time {
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+
+        .thread-preview {
+            color: #6b7280;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .message-compose {
+            border-top: 1px solid #e5e7eb;
+            padding: 20px;
+            background: #f9fafb;
+        }
+
+        .compose-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+
+        .compose-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .compose-info {
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+
+        .send-btn {
+            background: #1a1a1a;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .send-btn:hover {
+            background: #000000;
+        }
+
+        .send-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .messaging-toggle {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #1a1a1a;
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 1600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .messaging-toggle:hover {
+            background: #000000;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .message-notification {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .empty-messages {
+            text-align: center;
+            color: #6b7280;
+            padding: 40px 20px;
+        }
+
+        .empty-messages h4 {
+            margin-bottom: 10px;
+            color: #374151;
+        }
+
+        /* Image Upload and Display Styles */
+        .image-preview-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .image-preview-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f3f4f6;
+        }
+
+        .image-preview-img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .image-remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .image-remove-btn:hover {
+            background: #dc2626;
+            transform: scale(1.1);
+        }
+
+        .listing-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .listing-image.has-images {
+            background: none;
+            font-size: 0;
+            color: transparent;
+            padding: 0;
+        }
+
+        .listing-images-carousel {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .listing-image-slide {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .listing-image-slide.active {
+            display: block;
+        }
+
+        .image-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            z-index: 5;
+        }
+
+        .image-nav-btn:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .image-nav-btn.prev {
+            left: 10px;
+        }
+
+        .image-nav-btn.next {
+            right: 10px;
+        }
+
+        .image-counter {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-container">
+            <a href="index.html" class="logo">BSR</a>
+            <div class="search-container">
+                <span class="search-icon">⌕</span>
+                <input type="text" class="search-bar" placeholder="Search listings..." id="searchInput">
+            </div>
+            <nav class="nav-links">
+                <button class="nav-btn primary" id="postButton" onclick="checkAuthBeforePosting()">Post Listing</button>
+                <a href="#" class="nav-btn secondary" id="myListingsButton" style="display: none;" onclick="showMyListings()">My Listings</a>
+                <a href="#" class="nav-btn secondary" id="bookmarksButton" style="display: none;" onclick="showBookmarks()">Saved</a>
+                <a href="#" class="nav-btn secondary" id="loginButton" onclick="openModal('authModal')">Sign Up</a>
+                <div class="user-menu" id="userMenu">
+                    <span id="userName"></span>
+                    <button class="nav-btn secondary" onclick="logout()">Logout</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <div class="container">
+            <!-- Hero Section -->
+            <section class="hero">
+                <h1>Local Marketplace</h1>
+                <p>Connect with people in your area to buy, sell, and rent items safely</p>
+                <div class="cta-buttons">
+                    <button class="cta-btn primary" id="heroPostButton" onclick="checkAuthBeforePosting()">Post Your Listing</button>
+                    <a href="#categories" class="cta-btn secondary">Explore Categories</a>
+                </div>
+            </section>
+
+            <!-- Categories -->
+            <section class="categories" id="categories">
+                <h2 class="section-title">Browse Categories</h2>
+                <div class="category-grid">
+                    <div class="category-card" onclick="filterByCategory('electronics')">
+                        <h3>Electronics</h3>
+                        <p>Phones, computers, gaming, and tech accessories</p>
+                    </div>
+                    <div class="category-card" onclick="filterByCategory('vehicles')">
+                        <h3>Vehicles</h3>
+                        <p>Cars, motorcycles, bikes, and automotive parts</p>
+                    </div>
+                    <div class="category-card" onclick="filterByCategory('home')">
+                        <h3>Home & Garden</h3>
+                        <p>Furniture, appliances, decor, and outdoor items</p>
+                    </div>
+                    <div class="category-card" onclick="filterByCategory('fashion')">
+                        <h3>Fashion</h3>
+                        <p>Clothing, shoes, accessories, and jewelry</p>
+                    </div>
+                    <div class="category-card" onclick="filterByCategory('sports')">
+                        <h3>Sports & Recreation</h3>
+                        <p>Equipment, fitness gear, and outdoor activities</p>
+                    </div>
+                    <div class="category-card" onclick="filterByCategory('books')">
+                        <h3>Books & Media</h3>
+                        <p>Books, movies, music, and educational materials</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Main Listings Section -->
+            <section class="listings-section" id="mainListings">
+                <div class="listings-header">
+                    <h2 class="section-title">Recent Listings</h2>
+                    <div class="filter-bar">
+                        <select class="filter-select" id="categoryFilter">
+                            <option value="">All Categories</option>
+                            <option value="electronics">Electronics</option>
+                            <option value="vehicles">Vehicles</option>
+                            <option value="home">Home & Garden</option>
+                            <option value="fashion">Fashion</option>
+                            <option value="sports">Sports & Recreation</option>
+                            <option value="books">Books & Media</option>
+                        </select>
+                        <select class="filter-select" id="typeFilter">
+                            <option value="">All Types</option>
+                            <option value="sell">For Sale</option>
+                            <option value="rent">For Rent</option>
+                            <option value="buy">Looking to Buy</option>
+                        </select>
+                        <select class="filter-select" id="sortFilter" onchange="sortListings(this.value)">
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                            <option value="price-low">Price: Low to High</option>
+                            <option value="price-high">Price: High to Low</option>
+                            <option value="expiry">Expiring Soon</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="listings-grid" id="listingsGrid">
+                    <!-- Listings will be populated here -->
+                </div>
+            </section>
+
+            <!-- My Listings Section (Initially Hidden) -->
+            <section class="listings-section" id="myListingsSection" style="display: none;">
+                <div class="listings-header">
+                    <h2 class="section-title">My Listings</h2>
+                    <div id="listingStats" style="margin-bottom: 1rem; text-align: center; color: #6b7280;"></div>
+                    <button class="nav-btn primary" onclick="showMainListings()">← Back to All Listings</button>
+                </div>
+                <div class="my-listings-grid" id="myListingsGrid">
+                    <!-- User's listings will be populated here -->
+                </div>
+            </section>
+
+            <!-- Bookmarks Section (Initially Hidden) -->
+            <section class="listings-section" id="bookmarksSection" style="display: none;">
+                <div class="listings-header">
+                    <h2 class="section-title">Saved Listings</h2>
+                    <button class="nav-btn primary" onclick="showMainListings()">← Back to All Listings</button>
+                </div>
+                <div class="listings-grid" id="bookmarksGrid">
+                    <!-- Bookmarked listings will be populated here -->
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Messaging System -->
+    <button class="messaging-toggle" id="messagingToggle" onclick="toggleMessaging()">
+        Messages
+        <span class="message-notification" id="messageNotification" style="display: none;">0</span>
+    </button>
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/service-worker.js').catch(function(err){
+            console.warn('Service worker registration failed', err);
+          });
+        });
+      }
+    </script>
+
+    <div class="messaging-panel" id="messagingPanel">
+        <div class="messaging-header">
+            <h3>Messages</h3>
+            <button class="message-close-btn" onclick="toggleMessaging()">&times;</button>
+        </div>
+        <div class="messages-container" id="messagesContainer">
+            <div class="empty-messages" id="emptyMessages">
+                <h4>No messages yet</h4>
+                <p>Start a conversation by messaging someone about their listing</p>
+            </div>
+        </div>
+        <div class="message-compose" id="messageCompose" style="display: none;">
+            <div class="compose-info" id="composeInfo">Compose new message</div>
+            <textarea class="compose-input" id="composeInput" placeholder="Type your message..."></textarea>
+            <div class="compose-actions">
+                <div class="compose-info" id="recipientInfo"></div>
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Authentication Modal -->
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('authModal')">&times;</button>
+            <div class="auth-container">
+                <div class="auth-tabs">
+                    <div class="auth-tab active" id="loginTab" onclick="switchAuthTab('login')">Sign In</div>
+                    <div class="auth-tab" id="registerTab" onclick="switchAuthTab('register')">Sign Up</div>
+                </div>
+                
+                <!-- Login Form -->
+                <form id="loginForm" class="auth-form active">
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-input" id="loginEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-input" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="submit-btn">Sign In</button>
+                    <div style="text-align: center; margin-top: 1rem;">
+                        <button type="button" class="nav-btn secondary" onclick="switchAuthTab('register')" style="width: auto; padding: 8px 16px;">Don't have an account? Sign Up</button>
+                    </div>
+                </form>
+                
+                <!-- Register Form -->
+                <form id="registerForm" class="auth-form">
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-input" id="registerName" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-input" id="registerEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Phone Number (Optional)</label>
+                        <input type="tel" class="form-input" id="registerPhone" placeholder="+1 (555) 123-4567">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-input" id="registerPassword" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirm Password</label>
+                        <input type="password" class="form-input" id="registerConfirmPassword" required minlength="6">
+                    </div>
+                    <button type="submit" class="submit-btn">Create Account</button>
+                    <div style="text-align: center; margin-top: 1rem;">
+                        <button type="button" class="nav-btn secondary" onclick="switchAuthTab('login')" style="width: auto; padding: 8px 16px;">Already have an account? Sign In</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Post Listing Modal -->
+    <div id="postModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('postModal')">&times;</button>
+            <h2 style="font-size: 2rem; margin-bottom: 2rem; color: #111827;">Create New Listing</h2>
+            <form id="postForm">
+                <div class="form-group">
+                    <label class="form-label">Title *</label>
+                    <input type="text" class="form-input" id="postTitle" required placeholder="What are you listing?">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Category *</label>
+                        <select class="form-input" id="postCategory" required>
+                            <option value="">Select Category</option>
+                            <option value="electronics">Electronics</option>
+                            <option value="vehicles">Vehicles</option>
+                            <option value="home">Home & Garden</option>
+                            <option value="fashion">Fashion</option>
+                            <option value="sports">Sports & Recreation</option>
+                            <option value="books">Books & Media</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Type *</label>
+                        <select class="form-input" id="postType" required>
+                            <option value="">Select Type</option>
+                            <option value="sell">For Sale</option>
+                            <option value="rent">For Rent</option>
+                            <option value="buy">Looking to Buy</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Price ($) *</label>
+                        <input type="number" class="form-input" id="postPrice" min="0" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Location *</label>
+                        <input type="text" class="form-input" id="postLocation" required placeholder="City, State">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description *</label>
+                    <textarea class="form-input form-textarea" id="postDescription" required placeholder="Describe your item..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Images (Optional)</label>
+                    <input type="file" class="form-input" id="postImages" accept="image/*" multiple>
+                    <small style="color: #6b7280; margin-top: 0.5rem; display: block;">You can upload multiple images (max 5). Supported formats: JPG, PNG, GIF</small>
+                    <div id="imagePreview" class="image-preview-container"></div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Phone Number (Optional)</label>
+                        <input type="tel" class="form-input" id="postPhone" placeholder="(555) 123-4567">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Listing Duration *</label>
+                        <select class="form-input" id="postDuration" required>
+                            <option value="24">24 Hours</option>
+                            <option value="48" selected>48 Hours</option>
+                            <option value="72">72 Hours</option>
+                            <option value="168">7 Days</option>
+                            <option value="336">14 Days</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn">Post Listing</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Auth Required Message Modal -->
+    <div id="authRequiredModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('authRequiredModal')">&times;</button>
+            <div class="auth-message">
+                <h3>Sign in required</h3>
+                <p>You need to be signed in to post a listing on BSR.</p>
+                <button class="submit-btn" onclick="closeModal('authRequiredModal'); openModal('authModal');">Sign In or Register</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('deleteModal')">&times;</button>
+            <div class="auth-message">
+                <h3>Confirm Deletion</h3>
+                <p>Are you sure you want to delete this listing? This action cannot be undone.</p>
+                <input type="hidden" id="deleteListingId">
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button class="cancel-btn" onclick="closeModal('deleteModal')">Cancel</button>
+                    <button class="confirm-btn" onclick="confirmDeleteListing()">Delete Listing</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // Global account system with server-side storage
+        
+        // User authentication
+        let currentUser = JSON.parse(localStorage.getItem('bsrCurrentUser'));
+        
+        // Global data storage
+        let listings = [];
+        let filteredListings = [];
+        let bookmarkedListings = [];
+        let users = [];
+        let messages = [];
+        
+        // Current conversation state
+        let currentRecipient = null;
+        let messagingOpen = false;
+        
+        
+        // Generate unique IDs
+        function generateId() {
+            return Date.now() + Math.random().toString(36).substr(2, 9);
+        }
+        
+        // Persist data locally
+        function saveData() {
+            localStorage.setItem('bsrListings', JSON.stringify(listings));
+            localStorage.setItem('bsrUsers', JSON.stringify(users));
+            localStorage.setItem('bsrMessages', JSON.stringify(messages));
+            localStorage.setItem('bsrBookmarks', JSON.stringify(bookmarkedListings));
+        }
+
+        // Messaging System Functions
+        function toggleMessaging() {
+            const panel = document.getElementById('messagingPanel');
+            messagingOpen = !messagingOpen;
+            
+            if (messagingOpen) {
+                panel.classList.add('open');
+                loadMessages();
+            } else {
+                panel.classList.remove('open');
+            }
+        }
+        
+        function startMessage(recipient) {
+            if (!currentUser) {
+                showNotification('Please sign in to send messages', 'error');
+                return;
+            }
+            
+            if (currentUser.id === recipient.id) {
+                showNotification('You cannot message yourself', 'error');
+                return;
+            }
+            
+            currentRecipient = recipient;
+            
+            // Open messaging panel
+            if (!messagingOpen) {
+                toggleMessaging();
+            }
+            
+            // Show compose area
+            document.getElementById('messageCompose').style.display = 'block';
+            document.getElementById('recipientInfo').textContent = `To: ${recipient.name} (about: ${recipient.listing})`;
+            document.getElementById('composeInput').focus();
+            
+            // Pre-fill message
+            document.getElementById('composeInput').value = `Hi! I'm interested in your listing: "${recipient.listing}". `;
+            document.getElementById('sendBtn').disabled = false;
+        }
+        
+        async function sendMessage() {
+            if (!currentUser || !currentRecipient) return;
+            
+            const messageText = document.getElementById('composeInput').value.trim();
+            if (!messageText) {
+                showNotification('Please enter a message', 'error');
+                return;
+            }
+            
+            const newMessage = {
+                id: generateId(),
+                from_id: currentUser.id,
+                from_name: currentUser.name,
+                to_id: currentRecipient.id,
+                to_name: currentRecipient.name,
+                message: messageText,
+                listing_title: currentRecipient.listing,
+                timestamp: Date.now(),
+                read: false
+            };
+            
+            try {
+                messages.push(newMessage);
+                saveData();
+                
+                // Clear compose area
+                document.getElementById('composeInput').value = '';
+                document.getElementById('messageCompose').style.display = 'none';
+                currentRecipient = null;
+                
+                showNotification('Message sent!');
+                loadMessages();
+            } catch (error) {
+                showNotification('Failed to send message', 'error');
+            }
+        }
+        
+        function loadMessages() {
+            if (!currentUser) {
+                document.getElementById('messagesContainer').innerHTML = `
+                    <div class="empty-messages">
+                        <h4>Sign in required</h4>
+                        <p>Please sign in to view your messages</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Get messages for current user (both sent and received)
+            const userMessages = messages.filter(msg => 
+                msg.from_id === currentUser.id || msg.to_id === currentUser.id
+            );
+            
+            if (userMessages.length === 0) {
+                document.getElementById('messagesContainer').innerHTML = `
+                    <div class="empty-messages">
+                        <h4>No messages yet</h4>
+                        <p>Start a conversation by messaging someone about their listing</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Group messages by conversation (other user)
+            const conversations = {};
+            userMessages.forEach(msg => {
+                const otherUserId = msg.from_id === currentUser.id ? msg.to_id : msg.from_id;
+                const otherUserName = msg.from_id === currentUser.id ? msg.to_name : msg.from_name;
+                
+                if (!conversations[otherUserId]) {
+                    conversations[otherUserId] = {
+                        user_id: otherUserId,
+                        user_name: otherUserName,
+                        messages: [],
+                        unread: 0
+                    };
+                }
+                
+                conversations[otherUserId].messages.push(msg);
+                
+                // Count unread messages (received by current user)
+                if (msg.to_id === currentUser.id && !msg.read) {
+                    conversations[otherUserId].unread++;
+                }
+            });
+            
+            // Sort conversations by most recent message
+            const sortedConversations = Object.values(conversations).sort((a, b) => {
+                const lastMsgA = Math.max(...a.messages.map(m => m.timestamp));
+                const lastMsgB = Math.max(...b.messages.map(m => m.timestamp));
+                return lastMsgB - lastMsgA;
+            });
+            
+            // Update notification badge
+            const totalUnread = Object.values(conversations).reduce((sum, conv) => sum + conv.unread, 0);
+            const notificationBadge = document.getElementById('messageNotification');
+            if (totalUnread > 0) {
+                notificationBadge.textContent = totalUnread;
+                notificationBadge.style.display = 'flex';
+            } else {
+                notificationBadge.style.display = 'none';
+            }
+            
+            // Render conversations
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML = '';
+            
+            sortedConversations.forEach(conversation => {
+                const lastMessage = conversation.messages[conversation.messages.length - 1];
+                const preview = lastMessage.message.length > 50 ? 
+                                lastMessage.message.substr(0, 50) + '...' : lastMessage.message;
+                const timeAgo = getTimeAgo(lastMessage.timestamp);
+                
+                const threadElement = document.createElement('div');
+                threadElement.className = `message-thread ${conversation.unread > 0 ? 'unread' : ''}`;
+                threadElement.onclick = () => openConversation(conversation);
+                
+                threadElement.innerHTML = `
+                    <div class="thread-header">
+                        <div class="thread-title">${conversation.user_name}</div>
+                        <div class="thread-time">${timeAgo}</div>
+                    </div>
+                    <div class="thread-preview">
+                        ${lastMessage.listing_title ? `Re: ${lastMessage.listing_title}<br>` : ''}
+                        <strong>${lastMessage.from_id === currentUser.id ? 'You: ' : ''}</strong>${preview}
+                    </div>
+                `;
+                
+                container.appendChild(threadElement);
+            });
+        }
+        
+        async function openConversation(conversation) {
+            // Mark messages as read
+            const messagesToMarkRead = [];
+            messages.forEach(msg => {
+                if (msg.to_id === currentUser.id && msg.from_id === conversation.user_id && !msg.read) {
+                    msg.read = true;
+                    messagesToMarkRead.push(msg.id);
+                }
+            });
+            
+            // Persist read status locally
+            saveData();
+            
+            // For now, just show a preview of all messages in the conversation
+            const allMessages = conversation.messages.sort((a, b) => a.timestamp - b.timestamp);
+            let conversationPreview = `Conversation with ${conversation.user_name}:\n\n`;
+            
+            allMessages.forEach(msg => {
+                const sender = msg.from_id === currentUser.id ? 'You' : msg.from_name;
+                const time = new Date(msg.timestamp).toLocaleString();
+                conversationPreview += `[${time}] ${sender}: ${msg.message}\n\n`;
+            });
+            
+            alert(conversationPreview);
+            loadMessages(); // Refresh to update unread counts
+        }
+        
+        function getTimeAgo(timestamp) {
+            const now = Date.now();
+            const diff = now - timestamp;
+            const minutes = Math.floor(diff / (1000 * 60));
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            
+            if (minutes < 1) return 'Just now';
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            if (days < 7) return `${days}d ago`;
+            return new Date(timestamp).toLocaleDateString();
+        }
+        
+        // API Helper Functions (removed: offline-only)
+        
+        // Load data (offline-only)
+        async function loadGlobalData() {
+            listings = JSON.parse(localStorage.getItem('bsrListings')) || [];
+            users = JSON.parse(localStorage.getItem('bsrUsers')) || [];
+            messages = JSON.parse(localStorage.getItem('bsrMessages')) || [];
+            bookmarkedListings = JSON.parse(localStorage.getItem('bsrBookmarks')) || [];
+        }
+
+        // Check authentication status and update UI
+        function updateAuthUI() {
+            const loginButton = document.getElementById('loginButton');
+            const userMenu = document.getElementById('userMenu');
+            const userName = document.getElementById('userName');
+            const myListingsButton = document.getElementById('myListingsButton');
+            const bookmarksButton = document.getElementById('bookmarksButton');
+            
+            if (currentUser) {
+                loginButton.style.display = 'none';
+                userMenu.style.display = 'flex';
+                userName.textContent = currentUser.name;
+                myListingsButton.style.display = 'block';
+                bookmarksButton.style.display = 'block';
+            } else {
+                loginButton.style.display = 'block';
+                userMenu.style.display = 'none';
+                myListingsButton.style.display = 'none';
+                bookmarksButton.style.display = 'none';
+            }
+        }
+
+        // Check authentication before posting
+        function checkAuthBeforePosting() {
+            if (currentUser) {
+                openModal('postModal');
+            } else {
+                openModal('authRequiredModal');
+            }
+        }
+
+        // Auth tab switching
+        function switchAuthTab(tab) {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+            
+            if (tab === 'login') {
+                document.getElementById('loginTab').classList.add('active');
+                document.getElementById('loginForm').classList.add('active');
+            } else {
+                document.getElementById('registerTab').classList.add('active');
+                document.getElementById('registerForm').classList.add('active');
+            }
+        }
+
+        // Hash password (simple implementation for demo)
+        function hashPassword(password) {
+            // Simple hash function for demo purposes
+            let hash = 0;
+            for (let i = 0; i < password.length; i++) {
+                const char = password.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convert to 32-bit integer
+            }
+            return hash.toString();
+        }
+
+        
+        // Login function
+        async function login(email, password) {
+            const localUsers = JSON.parse(localStorage.getItem('bsrUsers')) || [];
+            const user = localUsers.find(u => u.email === email && u.password === password);
+            if (user) {
+                currentUser = { id: user.id, name: user.name, email: user.email, phone: user.phone };
+                localStorage.setItem('bsrCurrentUser', JSON.stringify(currentUser));
+                updateAuthUI();
+                closeModal('authModal');
+                showNotification('Logged in successfully!');
+                await loadGlobalData();
+                displayListings();
+                return true;
+            }
+            showNotification('Invalid email or password', 'error');
+            return false;
+        }
+
+        // Register function
+        async function register(name, email, password) {
+            const localUsers = JSON.parse(localStorage.getItem('bsrUsers')) || [];
+            if (localUsers.some(u => u.email === email)) {
+                showNotification('Email already registered', 'error');
+                return false;
+            }
+            const newUser = {
+                id: Date.now(),
+                name,
+                email,
+                password
+            };
+            localUsers.push(newUser);
+            localStorage.setItem('bsrUsers', JSON.stringify(localUsers));
+            currentUser = { id: newUser.id, name: newUser.name, email: newUser.email };
+            localStorage.setItem('bsrCurrentUser', JSON.stringify(currentUser));
+            updateAuthUI();
+            closeModal('authModal');
+            showNotification('Account created successfully!');
+            await loadGlobalData();
+            displayListings();
+            return true;
+        }
+
+        
+        // Logout function
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('bsrCurrentUser');
+            updateAuthUI();
+            showNotification('Logged out');
+            loadListings();
+            showMainListings();
+        }
+
+        // Calculate expiration time and formatted display
+        function calculateExpiry(listing) {
+            const now = Date.now();
+            const expiryTime = listing.timestamp + (listing.duration * 60 * 60 * 1000);
+            const timeLeft = expiryTime - now;
+            
+            if (timeLeft <= 0) {
+                return { expired: true, display: "Expired" };
+            }
+            
+            // Convert to hours
+            const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
+            
+            if (hoursLeft < 1) {
+                const minutesLeft = Math.floor(timeLeft / (1000 * 60));
+                return { expired: false, display: `${minutesLeft}m left` };
+            } else if (hoursLeft < 24) {
+                return { expired: false, display: `${hoursLeft}h left` };
+            } else {
+                const daysLeft = Math.floor(hoursLeft / 24);
+                return { expired: false, display: `${daysLeft}d left` };
+            }
+        }
+
+        // Load listings with filtering and sorting
+        function loadListings(filters = {}) {
+            // First, remove expired listings from the main array
+            const now = Date.now();
+            const originalLength = listings.length;
+            listings = listings.filter(listing => {
+                const expiryTime = listing.timestamp + (listing.duration * 60 * 60 * 1000);
+                return now < expiryTime;
+            });
+            
+            // Persist current listings after removing expired ones
+            if (listings.length !== originalLength) {
+                saveData();
+            }
+            
+            // Start with all non-expired listings
+            let result = [...listings];
+            
+            // Apply user filter
+            if (filters.user_id) {
+                result = result.filter(listing => listing.user_id == filters.user_id);
+            }
+            
+            // Apply category filter
+            if (filters.category) {
+                result = result.filter(listing => listing.category === filters.category);
+            }
+            
+            // Apply type filter
+            if (filters.type) {
+                result = result.filter(listing => listing.type === filters.type);
+            }
+            
+            // Apply search filter
+            if (filters.search) {
+                const searchTerm = filters.search.toLowerCase();
+                result = result.filter(listing => 
+                    listing.title.toLowerCase().includes(searchTerm) ||
+                    listing.description.toLowerCase().includes(searchTerm) ||
+                    listing.location.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            // Calculate expiry for each listing (should all be non-expired now)
+            result = result.map(listing => ({
+                ...listing,
+                expiry: calculateExpiry(listing)
+            }));
+            
+            // Apply sorting
+            if (filters.sort) {
+                switch (filters.sort) {
+                    case 'newest':
+                        result.sort((a, b) => b.timestamp - a.timestamp);
+                        break;
+                    case 'oldest':
+                        result.sort((a, b) => a.timestamp - b.timestamp);
+                        break;
+                    case 'price-low':
+                        result.sort((a, b) => a.price - b.price);
+                        break;
+                    case 'price-high':
+                        result.sort((a, b) => b.price - a.price);
+                        break;
+                    case 'expiry':
+                        result.sort((a, b) => {
+                            return a.timestamp + (a.duration * 60 * 60 * 1000) - (b.timestamp + (b.duration * 60 * 60 * 1000));
+                        });
+                        break;
+                    default:
+                        result.sort((a, b) => b.timestamp - a.timestamp);
+                }
+            } else {
+                result.sort((a, b) => b.timestamp - a.timestamp);
+            }
+            
+            filteredListings = result;
+        }
+
+        // Display listings
+        async function displayListings() {
+            const grid = document.getElementById('listingsGrid');
+            
+            if (filteredListings.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <h3>No listings yet</h3>
+                        <p>Be the first to post a listing in your area!</p>
+                        <button class="cta-btn primary" onclick="checkAuthBeforePosting()">Post First Listing</button>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = '';
+            filteredListings.forEach((listing, index) => {
+                const listingCard = document.createElement('div');
+                listingCard.className = 'listing-card fade-in';
+                listingCard.style.animationDelay = `${index * 0.1}s`;
+                
+                const priceText = listing.type === 'rent' ? `$${listing.price}/day` : 
+                                  listing.type === 'buy' ? `Budget: $${listing.price}` : `$${listing.price}`;
+                
+                const typeText = listing.type === 'buy' ? 'wanted' : listing.type;
+                
+                // Check if current user is the owner
+                const isOwner = currentUser && listing.user_id == currentUser.id;
+                const isBookmarkedListing = currentUser && isBookmarked(listing.id);
+                
+                // Create the owner controls if needed
+                const ownerControls = isOwner ? `
+                    <div class="owner-actions">
+                        <button class="owner-btn" title="Delete listing" onclick="deleteListing(${listing.id})">Delete</button>
+                    </div>
+                ` : `   
+                    <div class="owner-actions">
+                        <button class="owner-btn" title="${isBookmarkedListing ? 'Remove bookmark' : 'Bookmark'}" onclick="toggleBookmark(${listing.id})">${isBookmarkedListing ? 'Saved' : 'Save'}</button>
+                        <button class="owner-btn" title="Report listing" onclick="reportListing(${listing.id})">Report</button>
+                    </div>
+                `;
+                
+                listingCard.setAttribute('data-listing-id', listing.id);
+                
+                // Prepare listing data for contact seller
+                const contactData = {
+                    title: listing.title,
+                    price: listing.price,
+                    name: listing.user_name,
+                    email: listing.user_email
+                };
+                
+                listingCard.innerHTML = `
+                    <div class="expiry-badge">${listing.expiry.display}</div>
+                    ${ownerControls}
+                    ${createImageCarousel(listing.images, listing.id)}
+                    <div class="listing-content">
+                        <span class="listing-type type-${listing.type}">${typeText}</span>
+                        <h3 class="listing-title">${listing.title}</h3>
+                        <div class="listing-price">${priceText}</div>
+                        <p class="listing-description">${listing.description}</p>
+                        <div class="contact-buttons">
+                            ${listing.phone ? `<a href="tel:${listing.phone}" class="contact-btn phone">Call</a>` : ''}
+                            <button class="contact-btn email" onclick='contactSeller(${JSON.stringify(contactData)})'>Email</button>
+                            <button class="contact-btn email" onclick='startMessage(${JSON.stringify({id: listing.user_id, name: listing.user_name, listing: listing.title})})'>Message</button>
+                        </div>
+                        <div class="listing-meta">
+                            <span class="listing-location">${listing.location}</span>
+                            <span>${listing.posted}</span>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(listingCard);
+            });
+        }
+
+        // Display user's listings
+        function displayMyListings() {
+            if (!currentUser) return;
+            
+            loadListings({ user_id: currentUser.id });
+            
+            const grid = document.getElementById('myListingsGrid');
+            const statsDiv = document.getElementById('listingStats');
+            
+            const myListings = filteredListings;
+            
+            // Update stats
+            const stats = getListingStats();
+            if (stats) {
+                statsDiv.innerHTML = `Total: ${stats.total} | Active: ${stats.active}`;
+            }
+            
+            if (myListings.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <h3>You don't have any listings yet</h3>
+                        <p>Start selling or renting your items now!</p>
+                        <button class="cta-btn primary" onclick="checkAuthBeforePosting()">Post Your First Listing</button>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = '';
+            myListings.forEach((listing, index) => {
+                const listingCard = document.createElement('div');
+                listingCard.className = 'listing-card fade-in';
+                listingCard.style.animationDelay = `${index * 0.1}s`;
+                
+                const priceText = listing.type === 'rent' ? `$${listing.price}/day` : 
+                                  listing.type === 'buy' ? `Budget: $${listing.price}` : `$${listing.price}`;
+                
+                const typeText = listing.type === 'buy' ? 'wanted' : listing.type;
+                
+                const statusClass = 'type-' + listing.type;
+                const statusText = typeText;
+                
+                listingCard.setAttribute('data-listing-id', listing.id);
+                
+                listingCard.innerHTML = `
+                    <div class="expiry-badge">${listing.expiry.display}</div>
+                    <div class="owner-actions">
+                        <button class="owner-btn" title="Delete listing" onclick="deleteListing(${listing.id})">Delete</button>
+                    </div>
+                    ${createImageCarousel(listing.images, listing.id)}
+                    <div class="listing-content">
+                        <span class="listing-type ${statusClass}">${statusText}</span>
+                        <h3 class="listing-title">${listing.title}</h3>
+                        <div class="listing-price">${priceText}</div>
+                        <p class="listing-description">${listing.description}</p>
+                        <div class="listing-meta">
+                            <span class="listing-location">${listing.location}</span>
+                            <span>${listing.posted}</span>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(listingCard);
+            });
+        }
+
+        // Display bookmarked listings
+        function displayBookmarks() {
+            if (!currentUser) return;
+            
+            const grid = document.getElementById('bookmarksGrid');
+            
+            // Get bookmarked listing IDs for current user
+            const userBookmarks = bookmarkedListings.filter(bookmark => bookmark.user_id === currentUser.id);
+            
+            // Get the actual listing objects
+            const bookmarkedListingObjects = userBookmarks.map(bookmark => {
+                const listing = listings.find(l => l.id === bookmark.listing_id);
+                if (listing) {
+                    return {
+                        ...listing,
+                        expiry: calculateExpiry(listing)
+                    };
+                }
+                return null;
+            }).filter(listing => listing !== null);
+            
+            if (bookmarkedListingObjects.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <h3>No saved listings yet</h3>
+                        <p>Bookmark listings you're interested in for easy access later!</p>
+                        <button class="cta-btn primary" onclick="showMainListings()">Browse Listings</button>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = '';
+            bookmarkedListingObjects.forEach((listing, index) => {
+                const listingCard = document.createElement('div');
+                listingCard.className = 'listing-card fade-in';
+                listingCard.style.animationDelay = `${index * 0.1}s`;
+                
+                const priceText = listing.type === 'rent' ? `$${listing.price}/day` : 
+                                  listing.type === 'buy' ? `Budget: $${listing.price}` : `$${listing.price}`;
+                
+                const typeText = listing.type === 'buy' ? 'wanted' : listing.type;
+                
+                listingCard.setAttribute('data-listing-id', listing.id);
+                
+                const contactData = {
+                    title: listing.title,
+                    price: listing.price,
+                    name: listing.user_name,
+                    email: listing.user_email
+                };
+                
+                listingCard.innerHTML = `
+                    <div class="expiry-badge">${listing.expiry.display}</div>
+                    <div class="owner-actions">
+                        <button class="owner-btn" title="Remove bookmark" onclick="toggleBookmark(${listing.id})">Saved</button>
+                    </div>
+                    ${createImageCarousel(listing.images, listing.id)}
+                    <div class="listing-content">
+                        <span class="listing-type type-${listing.type}">${typeText}</span>
+                        <h3 class="listing-title">${listing.title}</h3>
+                        <div class="listing-price">${priceText}</div>
+                        <p class="listing-description">${listing.description}</p>
+                        <div class="contact-buttons">
+                            ${listing.phone ? `<a href="tel:${listing.phone}" class="contact-btn phone">Call</a>` : ''}
+                            <button class="contact-btn email" onclick='contactSeller(${JSON.stringify(contactData)})'>Email</button>
+                        </div>
+                        <div class="listing-meta">
+                            <span class="listing-location">${listing.location}</span>
+                            <span>${listing.posted}</span>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(listingCard);
+            });
+        }
+
+        // Show bookmarks section
+        function showBookmarks() {
+            // Check if user is authenticated
+            if (!currentUser) {
+                openModal('authRequiredModal');
+                return;
+            }
+            
+            // Hide hero and categories sections
+            document.querySelector('.hero').style.display = 'none';
+            document.querySelector('.categories').style.display = 'none';
+            
+            // Show/hide main sections
+            document.getElementById('mainListings').style.display = 'none';
+            document.getElementById('myListingsSection').style.display = 'none';
+            document.getElementById('bookmarksSection').style.display = 'block';
+            displayBookmarks();
+        }
+
+        // Filter functions
+        function filterByCategory(category) {
+            // Scroll to listings section
+            document.getElementById('mainListings').scrollIntoView({ behavior: 'smooth' });
+            
+            // Set the filter dropdown
+            document.getElementById('categoryFilter').value = category;
+            
+            // Apply the filter
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const category = document.getElementById('categoryFilter').value;
+            const type = document.getElementById('typeFilter').value;
+            const sort = document.getElementById('sortFilter').value;
+            
+            loadListings({ category, type, sort });
+            displayListings();
+        }
+
+        // Search function
+        function searchListings() {
+            const searchTerm = document.getElementById('searchInput').value;
+            const category = document.getElementById('categoryFilter').value;
+            const type = document.getElementById('typeFilter').value;
+            const sort = document.getElementById('sortFilter').value;
+            
+            loadListings({ search: searchTerm, category, type, sort });
+            displayListings();
+        }
+
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.innerHTML = message;
+            
+            if (type === 'error') {
+                notification.style.background = '#ef4444';
+            }
+            
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        // Modal functions
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // View control functions
+        function showMyListings() {
+            // Check if user is authenticated
+            if (!currentUser) {
+                openModal('authRequiredModal');
+                return;
+            }
+            
+            // Hide hero and categories sections
+            document.querySelector('.hero').style.display = 'none';
+            document.querySelector('.categories').style.display = 'none';
+            
+            // Show/hide main sections
+            document.getElementById('mainListings').style.display = 'none';
+            document.getElementById('myListingsSection').style.display = 'block';
+            document.getElementById('bookmarksSection').style.display = 'none';
+            displayMyListings();
+        }
+
+        function showMainListings() {
+            // Show hero and categories sections
+            document.querySelector('.hero').style.display = 'block';
+            document.querySelector('.categories').style.display = 'block';
+            
+            // Show/hide main sections
+            document.getElementById('mainListings').style.display = 'block';
+            document.getElementById('myListingsSection').style.display = 'none';
+            document.getElementById('bookmarksSection').style.display = 'none';
+        }
+
+        // Enhanced sorting and view options
+        function sortListings(sortBy) {
+            const category = document.getElementById('categoryFilter').value;
+            const type = document.getElementById('typeFilter').value;
+            const search = document.getElementById('searchInput').value;
+            
+            loadListings({ category, type, search, sort: sortBy });
+            displayListings();
+        }
+
+        // Enhanced analytics for user listings
+        function getListingStats() {
+            if (!currentUser || !filteredListings) return null;
+            const userListings = filteredListings;
+            
+            return {
+                total: userListings.length,
+                active: userListings.length,
+                categories: [...new Set(userListings.map(l => l.category))]
+            };
+        }
+
+        // Bookmark system
+        function toggleBookmark(listingId) {
+            if (!currentUser) {
+                showNotification('Please sign in to bookmark listings', 'error');
+                return;
+            }
+            
+            // Check if listing is already bookmarked
+            const existingBookmarkIndex = bookmarkedListings.findIndex(
+                bookmark => bookmark.user_id === currentUser.id && bookmark.listing_id === listingId
+            );
+            
+            if (existingBookmarkIndex > -1) {
+                // Remove bookmark
+                bookmarkedListings.splice(existingBookmarkIndex, 1);
+                showNotification('Bookmark removed');
+            } else {
+                // Add bookmark
+                bookmarkedListings.push({
+                    user_id: currentUser.id,
+                    listing_id: listingId,
+                    timestamp: Date.now()
+                });
+                showNotification('Listing bookmarked');
+            }
+            
+            // Save to localStorage
+            saveData();
+            
+            // Refresh the current view to update bookmark icons
+            if (document.getElementById('myListingsSection').style.display === 'block') {
+                displayMyListings();
+            } else if (document.getElementById('bookmarksSection').style.display === 'block') {
+                displayBookmarks();
+            } else {
+                displayListings();
+            }
+        }
+        
+        function isBookmarked(listingId) {
+            if (!currentUser) return false;
+            return bookmarkedListings.some(
+                bookmark => bookmark.user_id === currentUser.id && bookmark.listing_id === listingId
+            );
+        }
+
+        // Contact seller with pre-filled message
+        function contactSeller(listing) {
+            const subject = encodeURIComponent(`Interested in: ${listing.title}`);
+            const body = encodeURIComponent(
+                `Hi ${listing.name},\n\nI'm interested in your listing: "${listing.title}" for $${listing.price}.\n\nCould you please provide more details?\n\nThanks!`
+            );
+            window.open(`mailto:${listing.email}?subject=${subject}&body=${body}`);
+        }
+
+        // Report listing functionality
+        function reportListing(listingId) {
+            if (!currentUser) {
+                showNotification('Please sign in to report listings', 'error');
+                return;
+            }
+            
+            const reason = prompt('Please specify the reason for reporting this listing:');
+            if (reason && reason.trim()) {
+                // In a real application, this would send to a moderation system
+                showNotification('Thank you for reporting. We will review this listing.');
+                console.log(`Listing ${listingId} reported by user ${currentUser.id}: ${reason}`);
+            }
+        }
+
+        // Image handling functions
+        let selectedImages = [];
+        const maxImages = 5;
+
+        function handleImageSelection() {
+            const fileInput = document.getElementById('postImages');
+            const files = Array.from(fileInput.files);
+            
+            if (selectedImages.length + files.length > maxImages) {
+                showNotification(`You can only upload up to ${maxImages} images`, 'error');
+                return;
+            }
+            
+            files.forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const imageData = {
+                            id: Date.now() + Math.random(),
+                            data: e.target.result,
+                            name: file.name
+                        };
+                        selectedImages.push(imageData);
+                        updateImagePreview();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // Clear the file input
+            fileInput.value = '';
+        }
+
+        function updateImagePreview() {
+            const previewContainer = document.getElementById('imagePreview');
+            previewContainer.innerHTML = '';
+            
+            selectedImages.forEach(image => {
+                const previewItem = document.createElement('div');
+                previewItem.className = 'image-preview-item';
+                previewItem.innerHTML = `
+                    <img src="${image.data}" alt="${image.name}" class="image-preview-img">
+                    <button type="button" class="image-remove-btn" onclick="removeImage('${image.id}')">&times;</button>
+                `;
+                previewContainer.appendChild(previewItem);
+            });
+        }
+
+        function removeImage(imageId) {
+            selectedImages = selectedImages.filter(img => img.id !== imageId);
+            updateImagePreview();
+        }
+
+        function createImageCarousel(images, listingId) {
+            if (!images || images.length === 0) {
+                return '<div class="listing-image">Image</div>';
+            }
+            
+            if (images.length === 1) {
+                return `<div class="listing-image has-images"><img src="${images[0].data}" alt="Listing image"></div>`;
+            }
+            
+            let carouselHTML = '<div class="listing-image has-images"><div class="listing-images-carousel">';
+            
+            images.forEach((image, index) => {
+                const activeClass = index === 0 ? ' active' : '';
+                carouselHTML += `<img src="${image.data}" alt="Listing image ${index + 1}" class="listing-image-slide${activeClass}">`;
+            });
+            
+            carouselHTML += `
+                <button class="image-nav-btn prev" onclick="changeImage(${listingId}, -1)">‹</button>
+                <button class="image-nav-btn next" onclick="changeImage(${listingId}, 1)">›</button>
+                <div class="image-counter">1/${images.length}</div>
+            </div></div>`;
+            
+            return carouselHTML;
+        }
+
+        function changeImage(listingId, direction) {
+            const carousel = document.querySelector(`[data-listing-id="${listingId}"] .listing-images-carousel`);
+            if (!carousel) return;
+            
+            const slides = carousel.querySelectorAll('.listing-image-slide');
+            const counter = carousel.querySelector('.image-counter');
+            let currentIndex = Array.from(slides).findIndex(slide => slide.classList.contains('active'));
+            
+            slides[currentIndex].classList.remove('active');
+            
+            currentIndex += direction;
+            if (currentIndex >= slides.length) currentIndex = 0;
+            if (currentIndex < 0) currentIndex = slides.length - 1;
+            
+            slides[currentIndex].classList.add('active');
+            counter.textContent = `${currentIndex + 1}/${slides.length}`;
+        }
+
+        // Delete listing
+        function deleteListing(listingId) {
+            document.getElementById('deleteListingId').value = listingId;
+            openModal('deleteModal');
+        }
+
+        async function confirmDeleteListing() {
+            const listingId = parseInt(document.getElementById('deleteListingId').value);
+            
+            // Remove locally
+            const listingIndex = listings.findIndex(listing => listing.id === listingId);
+            if (listingIndex > -1) {
+                listings.splice(listingIndex, 1);
+            }
+            // Remove any bookmarks for this listing
+            bookmarkedListings = bookmarkedListings.filter(bookmark => bookmark.listing_id !== listingId);
+            saveData();
+            closeModal('deleteModal');
+            showNotification('Listing deleted successfully');
+            // Refresh the current view
+            if (document.getElementById('myListingsSection').style.display === 'block') {
+                displayMyListings();
+            } else if (document.getElementById('bookmarksSection').style.display === 'block') {
+                displayBookmarks();
+            } else {
+                loadListings();
+                displayListings();
+            }
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Initialize UI based on authentication status
+            updateAuthUI();
+            
+            // Load global data from server
+            await loadGlobalData();
+            
+            // Load and display listings
+            loadListings();
+            displayListings();
+            
+            // Login form submission
+            document.getElementById('loginForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const email = document.getElementById('loginEmail').value;
+                const password = document.getElementById('loginPassword').value;
+                
+                await login(email, password);
+            });
+            
+            // Register form submission
+            document.getElementById('registerForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const name = document.getElementById('registerName').value;
+                const email = document.getElementById('registerEmail').value;
+                const password = document.getElementById('registerPassword').value;
+                const confirmPassword = document.getElementById('registerConfirmPassword').value;
+                
+                if (password !== confirmPassword) {
+                    showNotification('Passwords do not match', 'error');
+                    return;
+                }
+                
+                await register(name, email, password);
+            });
+            
+            
+            // Image upload event listener
+            document.getElementById('postImages').addEventListener('change', handleImageSelection);
+
+            // Post listing form submission
+            document.getElementById('postForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                if (!currentUser) {
+                    closeModal('postModal');
+                    openModal('authRequiredModal');
+                    return;
+                }
+                
+                const duration = parseInt(document.getElementById('postDuration').value);
+                const durationText = duration <= 24 ? '24 hours' : 
+                                    duration <= 48 ? '48 hours' : 
+                                    duration <= 72 ? '3 days' : 
+                                    duration <= 168 ? '7 days' : '14 days';
+                
+                const now = Date.now();
+                const newListing = {
+                    id: generateId(),
+                    user_id: currentUser.id,
+                    user_name: currentUser.name,
+                    user_email: currentUser.email,
+                    title: document.getElementById('postTitle').value,
+                    description: document.getElementById('postDescription').value,
+                    price: parseFloat(document.getElementById('postPrice').value),
+                    category: document.getElementById('postCategory').value,
+                    type: document.getElementById('postType').value,
+                    location: document.getElementById('postLocation').value,
+                    phone: document.getElementById('postPhone').value,
+                    duration: duration,
+                    images: selectedImages.map(img => ({ data: img.data, name: img.name })),
+                    timestamp: now,
+                    posted: new Date(now).toLocaleDateString()
+                };
+                
+                // Add locally
+                listings.push(newListing);
+                saveData();
+                
+                closeModal('postModal');
+                this.reset();
+                
+                // Clear selected images
+                selectedImages = [];
+                updateImagePreview();
+                
+                showNotification(`Listing posted successfully! It will expire in ${durationText}.`);
+                
+                // Refresh listings
+                loadListings();
+                displayListings();
+            });
+            
+            // Search functionality
+            document.getElementById('searchInput').addEventListener('input', searchListings);
+            
+            // Filter listeners
+            document.getElementById('categoryFilter').addEventListener('change', applyFilters);
+            document.getElementById('typeFilter').addEventListener('change', applyFilters);
+            
+            // Message compose listener
+            document.getElementById('composeInput').addEventListener('input', function() {
+                const sendBtn = document.getElementById('sendBtn');
+                sendBtn.disabled = this.value.trim() === '';
+            });
+            
+            // Set up periodic refresh (every 5 minutes)
+            setInterval(() => {
+                if (document.getElementById('myListingsSection').style.display === 'block') {
+                    displayMyListings();
+                } else if (document.getElementById('bookmarksSection').style.display === 'block') {
+                    displayBookmarks();
+                } else {
+                    loadListings();
+                    displayListings();
+                }
+            }, 300000);
+        });
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        }
+    </script>
+    
+</body>
+</html>

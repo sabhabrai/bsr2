@@ -1,0 +1,9 @@
+{
+  "name": "BSR Marketplace",
+  "short_name": "BSR",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a1a1a",
+  "scope": "/"
+}
