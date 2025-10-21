@@ -1,7 +1,7 @@
 {
-  "name": "bsr-sms-server",
+  "name": "bsr-dev-server",
   "version": "1.0.0",
-  "description": "BSR Marketplace SMS Verification Server",
+  "description": "BSR Marketplace minimal local dev server (no SMS)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -9,22 +9,17 @@
     "install-deps": "npm install"
   },
   "dependencies": {
-    "axios": "^1.12.2",
-    "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "twilio": "^4.18.0"
+    "express": "^4.18.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
   "keywords": [
-    "sms",
-    "twilio",
-    "verification",
     "marketplace",
-    "nodejs"
+    "nodejs",
+    "dev-server"
   ],
   "author": "BSR Team",
   "license": "MIT"
