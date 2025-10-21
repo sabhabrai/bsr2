@@ -1135,9 +1135,9 @@
             </div>
             <nav class="nav-links">
                 <button class="nav-btn primary" id="postButton" onclick="checkAuthBeforePosting()">Post Listing</button>
-                <a href="#" class="nav-btn secondary" id="myListingsButton" style="display: none;" onclick="showMyListings()">My Listings</a>
-                <a href="#" class="nav-btn secondary" id="bookmarksButton" style="display: none;" onclick="showBookmarks()">Saved</a>
-                <a href="#" class="nav-btn secondary" id="loginButton" onclick="openModal('authModal')">Sign Up</a>
+                <a href="javascript:void(0)" class="nav-btn secondary" id="myListingsButton" style="display: none;" onclick="showMyListings()">My Listings</a>
+                <a href="javascript:void(0)" class="nav-btn secondary" id="bookmarksButton" style="display: none;" onclick="showBookmarks()">Saved</a>
+                <a href="javascript:void(0)" class="nav-btn secondary" id="loginButton" onclick="openModal('authModal')">Sign Up</a>
                 <div class="user-menu" id="userMenu">
                     <span id="userName"></span>
                     <button class="nav-btn secondary" onclick="logout()">Logout</button>
@@ -1487,10 +1487,23 @@
             });
             const data = await resp.json().catch(() => ({}));
             if (!resp.ok || data.success === false) {
-                throw new Error(data.error || `Request failed: ${resp.status}`);
+                const err = new Error(data.error || `Request failed: ${resp.status}`);
+                err.status = resp.status;
+                err.data = data;
+                throw err;
             }
             return data;
         }
+
+        // Normalize URL: remove trailing '/#', '/?', or '/#?'
+        (function normalizeUrl() {
+            const { pathname, search, hash } = window.location;
+            const hasWeird = (hash === '#' || hash === '#?') || (search === '?' || search === '#?');
+            if (hasWeird) {
+                const clean = pathname;
+                history.replaceState(null, '', clean);
+            }
+        })();
 
         // Messaging System Functions
         function toggleMessaging() {
@@ -1806,7 +1819,18 @@
                 displayListings();
                 return true;
             } catch (e) {
-                showNotification(e.message || 'Invalid email or password', 'error');
+                if (e && e.status === 404) {
+                    showNotification('No account found for this email. Please register.', 'error');
+                    // Prefill register email and switch tab
+                    const regEmail = document.getElementById('registerEmail');
+                    if (regEmail) regEmail.value = email;
+                    switchAuthTab('register');
+                    openModal('authModal');
+                } else if (e && e.status === 401) {
+                    showNotification('Invalid password. Please try again.', 'error');
+                } else {
+                    showNotification(e.message || 'Login failed', 'error');
+                }
                 return false;
             }
         }
